@@ -46,6 +46,15 @@ export const addMenuItem = async (itemData) => {
       )
     }
 
+    const latestSnap = await get(menuRef)
+    const latest = valToList(latestSnap.val())
+    const latestClashes = findConflictingMenuItems(latest, validation.data.name, validation.data.category)
+    if (latestClashes.length > 0) {
+      return fail(
+        `A ${validation.data.category} product named "${validation.data.name}" already exists. Edit or rename it instead of adding a second one.`
+      )
+    }
+
     const payload = { ...validation.data }
     if (payload.image === undefined) delete payload.image
     if (payload.tag === undefined) delete payload.tag
