@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +27,7 @@ function ItemForm({ item, onDone }) {
   const [available, setAvailable] = useState(item?.available ?? true)
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
+  const submitting = useRef(false)
 
   
   
@@ -36,14 +37,21 @@ function ItemForm({ item, onDone }) {
 
   async function submit(e) {
     e.preventDefault()
+    if (submitting.current) return
     const p = Number(price)
     if (!name.trim()) return setError("Enter a name for the item.")
     if (!Number.isFinite(p) || p <= 0) return setError("Enter a price greater than 0.")
     if (clashes.length > 0) return setError(`A ${category} product named "${name.trim()}" already exists. Edit or rename it instead of adding a second one.`)
+    submitting.current = true
     setSaving(true)
-    const result = await saveMenuItem({ id: item?.id, name: name.trim(), price: p, category, description: description.trim(), image: image.trim() || undefined, available })
-    setSaving(false)
-    if (!result.success) return setError(result.message)
+    let result
+    try {
+      result = await saveMenuItem({ id: item?.id, name: name.trim(), price: p, category, description: description.trim(), image: image.trim() || undefined, available })
+    } finally {
+      setSaving(false)
+      submitting.current = false
+    }
+    if (!result || !result.success) return setError(result?.message || "Could not save item.")
     toast.success(item ? "Item updated" : "Item added")
     onDone()
   }
