@@ -8,7 +8,7 @@ export function normalizeMenuName(raw) {
 }
 
 function key(name, category) {
-  return `${normalizeMenuName(name)}::${category.trim().toLowerCase()}`
+  return normalizeMenuName(name)
 }
 
 
